@@ -48,6 +48,14 @@ const analyzeResume = async (req, res) => {
         - "strengths": An array of 3 strong points.
         - "weaknesses": An array of 3 areas needing improvement.
         - "tips": An array of 3 actionable tips to improve the resume.
+        - "smart_keywords": An array of 5 to 8 highly relevant ATS/industry keywords that the resume is critically MISSING and should be added to improve visibility.
+        - "recommended_roles": An array of 3 to 5 objects representing suggested job roles based on the resume. Each object must contain:
+           - "title": Job title string.
+           - "match_percentage": A number estimating how well the user fits this role.
+           - "matching_skills": Array of strings of skills that match.
+           - "missing_skills": Array of strings of critical skills the user lacks for this role.
+           - "improvement_suggestion": A short string tip on how to become a better fit for this specific role.
+        - "improved_resume_text": A thoroughly rewritten, ATS-optimized plain text version of the user's resume incorporating all your suggested improvements. Do NOT use markdown formatting like ** or ##, just raw clean text with standard newlines.
 
         Resume Text:
         ${resumeText}
