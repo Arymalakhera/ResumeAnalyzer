@@ -4,6 +4,7 @@ import { UploadCloud, Loader2, FileText, CheckCircle2, AlertTriangle, Lightbulb,
 import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { supabase } from './supabaseClient';
+import JobFitDashboard from './components/JobFitDashboard';
 
 // --- PREMIUM REUSABLE UI COMPONENTS (MINDLY STYLE) --- //
 
@@ -202,6 +203,8 @@ function App() {
   const [showImprovedResume, setShowImprovedResume] = useState(false);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard"); // "dashboard" | "comparer"
+  const [jobDescription, setJobDescription] = useState("");
+  const [isJobRoleMode, setIsJobRoleMode] = useState(false);
 
   // Blur-in effect states
   const heroSentence = "Your resume deserves a profile that stands out";
@@ -329,6 +332,9 @@ function App() {
 
     const formData = new FormData();
     formData.append('resume', file);
+    if (isJobRoleMode && jobDescription.trim()) {
+      formData.append('jobDescription', jobDescription);
+    }
 
     try {
       const response = await axios.post('http://localhost:5000/api/resume/analyze', formData, {
@@ -546,14 +552,21 @@ function App() {
                   initial={{ opacity: 0, y: 15 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.6, delay: 0.5, type: "spring" }}
-                  className="flex items-center gap-4 z-20 mb-16"
+                  className="flex flex-col sm:flex-row items-center justify-center gap-4 z-20 mb-16 w-full px-4"
                 >
                   <InteractiveButton
-                    onClick={() => setShowUploadModal(true)}
-                    className="px-10 py-4 text-lg bg-[#1E1E22] text-white shadow-[0_25px_50px_rgba(26,26,29,0.45),inset_0_1px_1px_rgba(255,255,255,0.25)] border border-slate-700/60 hover:shadow-[0_30px_60px_rgba(26,26,29,0.5),inset_0_1px_1px_rgba(255,255,255,0.3)] hover:-translate-y-1 transition-all duration-300 rounded-full flex items-center gap-3"
+                    onClick={() => { setIsJobRoleMode(false); setShowUploadModal(true); }}
+                    className="w-full sm:w-auto px-10 py-4 text-lg bg-[#1E1E22] text-white shadow-[0_25px_50px_rgba(26,26,29,0.45),inset_0_1px_1px_rgba(255,255,255,0.25)] border border-slate-700/60 hover:shadow-[0_30px_60px_rgba(26,26,29,0.5),inset_0_1px_1px_rgba(255,255,255,0.3)] hover:-translate-y-1 transition-all duration-300 rounded-full flex justify-center items-center gap-3"
                   >
                     Start Here
                     <ArrowRight className="w-5 h-5 opacity-90" />
+                  </InteractiveButton>
+                  <InteractiveButton
+                    onClick={() => { setIsJobRoleMode(true); setShowUploadModal(true); }}
+                    className="w-full sm:w-auto px-8 py-4 text-lg bg-white dark:bg-slate-800 text-slate-800 dark:text-white shadow-[0_10px_30px_rgba(0,0,0,0.05),inset_0_1px_1px_rgba(255,255,255,0.8)] border border-slate-200 dark:border-slate-700 hover:shadow-[0_15px_40px_rgba(0,0,0,0.1),inset_0_1px_1px_rgba(255,255,255,0.9)] hover:-translate-y-1 transition-all duration-300 rounded-full flex justify-center items-center gap-3"
+                  >
+                    Analyze for Job Role
+                    <Target className="w-5 h-5 opacity-80" />
                   </InteractiveButton>
                 </motion.div>
 
@@ -620,6 +633,9 @@ function App() {
 
             {/* Step 3: Good/Bad/Improve Results Dashboard */}
             {result && !loading && (
+              result.is_job_role_match ? (
+                <JobFitDashboard result={result} />
+              ) : (
               <motion.div
                 key="results-dashboard"
                 initial={{ opacity: 0, y: 20 }}
@@ -872,6 +888,7 @@ function App() {
                   </motion.div>
                 )}
               </motion.div>
+              )
             )}
           </AnimatePresence>
         </div>
@@ -911,7 +928,18 @@ function App() {
               </button>
 
               <div className="flex flex-col items-center pt-2">
-                <h2 className="font-serif text-2xl text-slate-900 dark:text-white mb-4 text-center">Analyze Your Profile</h2>
+                <h2 className="font-serif text-2xl text-slate-900 dark:text-white mb-4 text-center">
+                  {isJobRoleMode ? "Targeted Job Analysis" : "Analyze Your Profile"}
+                </h2>
+
+                {isJobRoleMode && (
+                  <textarea 
+                    value={jobDescription}
+                    onChange={(e) => setJobDescription(e.target.value)}
+                    placeholder="Paste the Job Description here..."
+                    className="w-full h-32 mb-4 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950/50 border border-slate-200 dark:border-slate-800 text-sm text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/50 transition-all resize-none shadow-inner"
+                  />
+                )}
 
                 <PulseUploadArea file={file} onFileChange={handleFileChange} />
 
