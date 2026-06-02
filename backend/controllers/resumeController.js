@@ -22,13 +22,13 @@ const analyzeResume = async (req, res) => {
         // Extract text based on file type
         if (req.file.mimetype === 'application/pdf') {
             const dataBuffer = fs.readFileSync(filePath);
-            
+
             const { PDFParse } = require('pdf-parse');
-            
+
             const parser = new PDFParse({ data: dataBuffer });
             const data = await parser.getText();
             resumeText = data.text;
-            
+
             await parser.destroy();
 
         } else if (req.file.mimetype === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
@@ -44,6 +44,11 @@ const analyzeResume = async (req, res) => {
         const prompt = `
         You are a senior tech recruiter and resume expert. Analyze the following resume text and provide structured feedback.
         Return the response strictly in JSON format with the following keys:
+        - "personal_info": An object containing:
+           - "name": The full name of the person (or "User" if missing).
+           - "email": Their email address (or "Not found").
+           - "phone": Their phone number (or "Not found").
+           - "current_role": Their current or most recent job title (or "Not found").
         - "score": A number out of 10.
         - "strengths": An array of 3 strong points.
         - "weaknesses": An array of 3 areas needing improvement.
@@ -55,14 +60,17 @@ const analyzeResume = async (req, res) => {
            - "matching_skills": Array of strings of skills that match.
            - "missing_skills": Array of strings of critical skills the user lacks for this role.
            - "improvement_suggestion": A short string tip on how to become a better fit for this specific role.
-        - "improved_resume_text": A thoroughly rewritten, ATS-optimized plain text version of the user's resume incorporating all your suggested improvements. Do NOT use markdown formatting like ** or ##, just raw clean text with standard newlines.
+        - "resume_sections": An array of objects breaking down the user's resume into logical sections (e.g., "Summary", "Experience", "Education", "Skills"). For EACH section, provide:
+           - "section_name": The title of the section.
+           - "original_text": The raw, unedited text from the user's resume for this specific section.
+           - "enhanced_text": The thoroughly rewritten, ATS-optimized plain text version of this specific section. Do NOT use markdown formatting, just clean text.
 
         Resume Text:
         ${resumeText}
         `;
 
         const completion = await ai.models.generateContent({
-            model: "gemini-2.5-flash", 
+            model: "gemini-2.5-flash-lite",
             contents: prompt,
             config: {
                 responseMimeType: "application/json",
@@ -74,7 +82,7 @@ const analyzeResume = async (req, res) => {
 
     } catch (error) {
         console.error('Error analyzing resume:', error);
-        
+
         // If the PDF library fails again, tell the frontend to ask for a Word Document
         if (error.message === "NODE_24_PDF_ERROR" || error.name === "TypeError") {
             return res.status(500).json({ error: 'Node 24 PDF Error: Please upload a .docx (Word Document) version of your resume instead!' });
