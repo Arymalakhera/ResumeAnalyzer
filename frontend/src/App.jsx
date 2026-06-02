@@ -4,7 +4,10 @@ import { UploadCloud, Loader2, FileText, CheckCircle2, AlertTriangle, Lightbulb,
 import { motion, AnimatePresence } from 'framer-motion';
 import { gsap } from 'gsap';
 import { supabase } from './supabaseClient';
-import JobFitDashboard from './components/JobFitDashboard';
+import AnalysisDashboard from './components/AnalysisDashboard';
+import Mascot from './components/Mascot';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 // --- PREMIUM REUSABLE UI COMPONENTS (MINDLY STYLE) --- //
 
@@ -48,8 +51,9 @@ export const InteractiveLoader = () => {
       transition={{ duration: 0.3 }}
       className="w-full flex flex-col items-center justify-center py-24 px-4"
     >
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.04)]">
-        <div className="flex justify-between items-end mb-4">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-8 rounded-3xl shadow-[0_20px_40px_rgba(0,0,0,0.04)] text-center flex flex-col items-center">
+        <Mascot mood="loading" scale={1.05} className="mb-6" />
+        <div className="flex justify-between items-end mb-4 w-full">
           <h2 className="font-serif text-2xl text-slate-900 dark:text-white">Analyzing Profile</h2>
           <span className="font-mono text-sm font-bold text-violet-600 dark:text-violet-400">{Math.floor(progress)}%</span>
         </div>
@@ -205,12 +209,10 @@ function App() {
   const [activeTab, setActiveTab] = useState("dashboard"); // "dashboard" | "comparer"
   const [jobDescription, setJobDescription] = useState("");
   const [isJobRoleMode, setIsJobRoleMode] = useState(false);
+  const [error, setError] = useState(null);
 
   // Blur-in effect states
   const heroSentence = "Your resume deserves a profile that stands out";
-
-  // Mascot Mouse tracking states
-  const [mascotLook, setMascotLook] = useState({ x: 0, y: 0 });
 
   // Auth States (Supabase)
   const [user, setUser] = useState(null);
@@ -251,18 +253,7 @@ function App() {
 
   // Snappy Blur-in Animation Trigger handled by Framer Motion directly on the element
 
-  // Mascot Eye Tracking MouseMove listener
-  useEffect(() => {
-    const handleMouseMove = (e) => {
-      // Calculate normalized delta coordinates relative to screen center
-      const x = (e.clientX / window.innerWidth) - 0.5; // range -0.5 to 0.5
-      const y = (e.clientY / window.innerHeight) - 0.5; // range -0.5 to 0.5
-      setMascotLook({ x, y });
-    };
-
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  // GSAP Snappy Blur-in Animation handled by Framer Motion directly on the element
 
   // GSAP Smooth Float Animations for Mini Resumes
   useEffect(() => {
@@ -325,9 +316,13 @@ function App() {
 
   // Send file to backend
   const handleUpload = async () => {
-    if (!file) return alert("Please select a file first!");
+    if (!file) {
+      setError("Please select a file first!");
+      return;
+    }
 
     setLoading(true);
+    setError(null);
     setShowUploadModal(false);
 
     const formData = new FormData();
@@ -337,22 +332,17 @@ function App() {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/api/resume/analyze', formData, {
+      const response = await axios.post(`${API_BASE_URL}/api/resume/analyze`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       setResult(response.data);
-    } catch (error) {
-      console.error("Error uploading file:", error);
-      alert("Failed to analyze resume. Verify that your backend server is active and Gemini API key is valid.");
+    } catch (err) {
+      console.error("Error uploading file:", err);
+      setError("Failed to analyze resume. Verify that your backend server is active and Gemini API key is valid.");
+      setResult(null);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Calculate eye pupil dynamic positioning values (translation offset)
-  // Multiply the normalized value (-0.5 to 0.5) by a larger factor to make the movement visible
-  const pupilStyle = {
-    transform: `translate(${mascotLook.x * 16}px, ${mascotLook.y * 18}px)`
   };
 
   return (
@@ -396,47 +386,7 @@ function App() {
         </motion.div>
       </div>
 
-      {/* Adorable peeking Mascot at the center bottom (Breathes & looks at cursor!) */}
-      {!loading && !result && (
-        <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 z-0 pointer-events-none hidden md:block">
-          <motion.div
-            initial={{ y: 100 }}
-            animate={{ y: [0, 5, 0] }}
-            transition={{ duration: 5, repeat: Infinity, ease: "easeInOut" }}
-            className="relative w-28 h-28 bg-[#B5BAFF] rounded-t-full shadow-[0_0_20px_rgba(181,186,255,0.4),inset_0_2px_4px_rgba(255,255,255,0.6)] flex flex-col items-center justify-center pt-6 px-4"
-          >
-            {/* Blushing cute pink cheeks */}
-            <div className="absolute bottom-7 left-4 w-4 h-2.5 bg-[#FFA5C0]/65 rounded-full filter blur-[1px]" />
-            <div className="absolute bottom-7 right-4 w-4 h-2.5 bg-[#FFA5C0]/65 rounded-full filter blur-[1px]" />
-
-            {/* Happy smiling mouth */}
-            <div className="absolute bottom-6 w-3 h-1.5 border-b-[3px] border-slate-700/80 rounded-b-full" />
-
-            {/* Eyes Container */}
-            <div className="flex gap-4 justify-center items-center">
-              {/* Left Eye */}
-              <div className="w-5 h-7 bg-white rounded-full flex items-center justify-center relative shadow-sm overflow-hidden border border-slate-100">
-                <div
-                  className="absolute w-3 h-3 bg-slate-900 rounded-full transition-transform duration-75 ease-out flex items-start justify-end p-0.5"
-                  style={pupilStyle}
-                >
-                  <div className="w-1 h-1 bg-white rounded-full" />
-                </div>
-              </div>
-
-              {/* Right Eye */}
-              <div className="w-5 h-7 bg-white rounded-full flex items-center justify-center relative shadow-sm overflow-hidden border border-slate-100">
-                <div
-                  className="absolute w-3 h-3 bg-slate-900 rounded-full transition-transform duration-75 ease-out flex items-start justify-end p-0.5"
-                  style={pupilStyle}
-                >
-                  <div className="w-1 h-1 bg-white rounded-full" />
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {/* Mascot removed from bottom center to reside in landing hero */}
 
       {/* Frame Container */}
       <div className="w-full max-w-6xl mx-auto flex-grow flex flex-col justify-between z-10 relative">
@@ -517,8 +467,7 @@ function App() {
         <div className="flex-grow flex flex-col justify-center px-4">
           <AnimatePresence mode="wait">
 
-            {/* Step 1: Mindly Centered Landing Screen */}
-            {!loading && !result && (
+            {!loading && !result && !error && (
               <motion.div
                 key="landing-hero"
                 initial={{ opacity: 0, y: 15 }}
@@ -527,6 +476,7 @@ function App() {
                 transition={{ duration: 0.5 }}
                 className="flex flex-col items-center text-center justify-center flex-grow pt-4 pb-20 md:pb-24 relative"
               >
+                <Mascot mood="happy" scale={1.05} className="mb-4" />
                 {/* Serif Elegant Central Header (Framer Blur In!) */}
                 <motion.h1
                   initial={{ filter: "blur(12px)", opacity: 0, y: 15 }}
@@ -631,276 +581,45 @@ function App() {
             {/* Step 2: Interactive Loading State */}
             {loading && <InteractiveLoader />}
 
+            {/* Step 2.5: Error State Dashboard */}
+            {error && !loading && !result && (
+              <motion.div
+                key="error-card"
+                initial={{ opacity: 0, scale: 0.98 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, filter: "blur(4px)" }}
+                transition={{ duration: 0.3 }}
+                className="w-full flex flex-col items-center justify-center py-20 px-4 animate-float"
+              >
+                <div className="w-full max-w-md bg-white/80 dark:bg-slate-900/80 border border-slate-200 dark:border-slate-805 p-8 rounded-[32px] shadow-[0_20px_40px_rgba(0,0,0,0.04)] text-center flex flex-col items-center backdrop-blur-md">
+                  <Mascot mood="error" scale={1.05} className="mb-6" />
+                  <h2 className="font-serif text-2xl text-slate-900 dark:text-white mb-3">Analysis Failed</h2>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 font-light leading-relaxed">
+                    {error}
+                  </p>
+                  <InteractiveButton 
+                    onClick={() => {
+                      setError(null);
+                      setShowUploadModal(true);
+                    }}
+                    className="px-8 py-3.5 w-full text-xs font-semibold tracking-wide"
+                  >
+                    Try Again
+                  </InteractiveButton>
+                </div>
+              </motion.div>
+            )}
+
             {/* Step 3: Good/Bad/Improve Results Dashboard */}
             {result && !loading && (
-              result.is_job_role_match ? (
-                <JobFitDashboard result={result} />
-              ) : (
-              <motion.div
-                key="results-dashboard"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.5 }}
-                className="w-full flex flex-col gap-6 py-6"
-              >
-                {/* Personalized Hero / Profile Header */}
-                <motion.div 
-                  initial={{ filter: "blur(10px)", opacity: 0, y: -10 }}
-                  animate={{ filter: "blur(0px)", opacity: 1, y: 0 }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
-                  className="mb-4"
-                >
-                  <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 mb-6">
-                    <div>
-                      <h2 className="font-serif text-3xl sm:text-4xl text-slate-900 dark:text-white leading-tight">
-                        Hey <span className="text-violet-600">{result.personal_info?.name || result.candidate_name || "User"}</span>,
-                        <br/>here is your Analysis.
-                      </h2>
-                    </div>
-                    <div className="flex flex-col gap-1 text-right bg-white/40 dark:bg-slate-900/40 p-4 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-sm backdrop-blur-sm">
-                      <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-widest">{result.personal_info?.current_role || "Professional Profile"}</span>
-                      <div className="flex items-center gap-3 text-sm text-slate-700 dark:text-slate-300">
-                        {result.personal_info?.email && <span>{result.personal_info.email}</span>}
-                        {result.personal_info?.phone && <span>• {result.personal_info.phone}</span>}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* Tab Navigation */}
-                  <div className="flex gap-2 p-1.5 bg-slate-100 dark:bg-slate-900 rounded-full w-full max-w-sm mb-4 border border-slate-200/50 dark:border-slate-800/50">
-                    <button 
-                      onClick={() => setActiveTab("dashboard")}
-                      className={`flex-1 py-2 px-4 rounded-full text-xs font-semibold transition-all duration-300 ${activeTab === "dashboard" ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-                    >
-                      Analysis Dashboard
-                    </button>
-                    <button 
-                      onClick={() => setActiveTab("comparer")}
-                      className={`flex-1 py-2 px-4 rounded-full text-xs font-semibold transition-all duration-300 ${activeTab === "comparer" ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm" : "text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"}`}
-                    >
-                      Smart Resume Builder
-                    </button>
-                  </div>
-                </motion.div>
-
-                {/* Top Action Bar */}
-                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-2 w-full border-b border-slate-100 dark:border-slate-800 pb-4">
-                  <InteractiveButton variant="secondary" onClick={() => { setResult(null); setFile(null); }} className="px-5 py-2 text-xs">
-                    ← Upload Another
-                  </InteractiveButton>
-                  <div className="flex gap-3 w-full sm:w-auto">
-                    <InteractiveButton variant="secondary" onClick={handleCopy} className="flex-1 sm:flex-none px-4 py-2 text-xs">
-                      {copied ? <Check className="w-3.5 h-3.5 mr-2 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-2" />}
-                      {copied ? 'Copied JSON' : 'Export Full JSON'}
-                    </InteractiveButton>
-                  </div>
-                </div>
-
-                {activeTab === "dashboard" ? (
-                  /* 3-Column Good/Bad/Improve Grid */
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full"
-                  >
-                    
-                    {/* Column 1: The Good (Strengths & Score) */}
-                    <div className="flex flex-col gap-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-900/50 flex items-center justify-center text-emerald-600 shadow-sm border border-emerald-200 dark:border-emerald-800">
-                          <CheckCircle2 className="w-4 h-4" />
-                        </div>
-                        <h3 className="font-serif text-xl text-slate-800 dark:text-slate-200">The Good</h3>
-                      </div>
-                      
-                      {/* Score Card */}
-                      <LiftCard className="flex flex-col items-center justify-center p-6 border-t-4 border-emerald-400">
-                        <h4 className="text-slate-400 font-semibold uppercase tracking-wider text-[10px] mb-4">ATS Match Score</h4>
-                        <div className="relative inline-flex items-center justify-center mb-4">
-                          <svg className="w-24 h-24 transform -rotate-90">
-                            <circle cx="48" cy="48" r="42" stroke="rgba(0,0,0,0.03)" strokeWidth="4" fill="transparent" />
-                            <motion.circle
-                              cx="48" cy="48" r="42" stroke="currentColor" strokeWidth="4" fill="transparent"
-                              initial={{ strokeDashoffset: 264 }}
-                              whileInView={{ strokeDashoffset: 264 - (264 * (result.score || 0)) / 10 }}
-                              transition={{ duration: 1.2, ease: "easeOut" }}
-                              viewport={{ once: true }}
-                              strokeDasharray={264}
-                              strokeLinecap="round"
-                              className="text-emerald-500 drop-shadow-sm"
-                            />
-                          </svg>
-                          <span className="absolute text-2xl font-serif font-black text-slate-800 dark:text-slate-200">
-                            {result.score || 0}<span className="text-xs text-slate-400 font-light font-sans">/10</span>
-                          </span>
-                        </div>
-                        <SmoothProgress percentage={percentile} colorClass="from-emerald-400 to-emerald-600" />
-                      </LiftCard>
-
-                      {/* Strengths List */}
-                      <LiftCard className="p-6">
-                        <h4 className="text-slate-500 dark:text-slate-400 font-semibold text-xs mb-4 uppercase tracking-wider">Verified Strengths</h4>
-                        <ul className="space-y-3 text-xs text-slate-600 dark:text-slate-300 font-light">
-                          {result.strengths && result.strengths.map((item, i) => (
-                            <li key={i} className="flex items-start">
-                              <span className="mr-2 text-emerald-500 mt-0.5">•</span>
-                              <span className="leading-relaxed">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </LiftCard>
-                    </div>
-
-                    {/* Column 2: The Bad (Alerts & Keywords) */}
-                    <div className="flex flex-col gap-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-rose-100 dark:bg-rose-900/50 flex items-center justify-center text-rose-500 shadow-sm border border-rose-200 dark:border-rose-800">
-                          <AlertTriangle className="w-4 h-4" />
-                        </div>
-                        <h3 className="font-serif text-xl text-slate-800 dark:text-slate-200">The Bad</h3>
-                      </div>
-                      
-                      {/* Weaknesses List */}
-                      <LiftCard className="p-6 border-t-4 border-rose-400">
-                        <h4 className="text-slate-500 dark:text-slate-400 font-semibold text-xs mb-4 uppercase tracking-wider">Core Alerts</h4>
-                        <ul className="space-y-3 text-xs text-slate-600 dark:text-slate-300 font-light">
-                          {result.weaknesses && result.weaknesses.map((item, i) => (
-                            <li key={i} className="flex items-start">
-                              <span className="mr-2 text-rose-500 mt-0.5">•</span>
-                              <span className="leading-relaxed">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </LiftCard>
-
-                      {/* Missing Keywords */}
-                      <LiftCard className="p-6">
-                        <h4 className="text-slate-500 dark:text-slate-400 font-semibold text-xs mb-4 uppercase tracking-wider flex items-center">
-                          <Hash className="w-3 h-3 mr-1" /> Missing Keywords
-                        </h4>
-                        <div className="flex flex-wrap gap-2">
-                          {result.smart_keywords && result.smart_keywords.map((keyword, idx) => (
-                            <span key={idx} className="px-3 py-1 bg-rose-50 border border-rose-100 text-rose-700 font-medium text-[11px] rounded-full transition-all">
-                              {keyword}
-                            </span>
-                          ))}
-                        </div>
-                      </LiftCard>
-                    </div>
-
-                    {/* Column 3: To Improve (Tips & Fit) */}
-                    <div className="flex flex-col gap-6">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-8 h-8 rounded-full bg-amber-100 dark:bg-amber-900/50 flex items-center justify-center text-amber-600 shadow-sm border border-amber-200 dark:border-amber-800">
-                          <Lightbulb className="w-4 h-4" />
-                        </div>
-                        <h3 className="font-serif text-xl text-slate-800 dark:text-slate-200">To Improve</h3>
-                      </div>
-
-                      {/* Actionable Tips */}
-                      <LiftCard className="p-6 border-t-4 border-amber-400">
-                        <h4 className="text-slate-500 dark:text-slate-400 font-semibold text-xs mb-4 uppercase tracking-wider">Actionable Fixes</h4>
-                        <ul className="space-y-3 text-xs text-slate-600 dark:text-slate-300 font-light">
-                          {result.tips && result.tips.map((item, i) => (
-                            <li key={i} className="flex items-start">
-                              <span className="mr-2 text-amber-500 mt-0.5">•</span>
-                              <span className="leading-relaxed">{item}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </LiftCard>
-
-                      {/* Recommended Roles Summary */}
-                      {result.recommended_roles && result.recommended_roles.length > 0 && (
-                        <LiftCard className="p-6">
-                          <h4 className="text-slate-500 dark:text-slate-400 font-semibold text-xs mb-4 uppercase tracking-wider flex items-center">
-                            <Target className="w-3 h-3 mr-1" /> Best Role Fits
-                          </h4>
-                          <div className="flex flex-col gap-3">
-                            {result.recommended_roles.map((role, idx) => (
-                              <div key={idx} className="flex justify-between items-center text-xs">
-                                <span className="font-medium text-slate-700 dark:text-slate-300">{role.title}</span>
-                                <span className="font-bold text-violet-600">{role.match_percentage}%</span>
-                              </div>
-                            ))}
-                          </div>
-                        </LiftCard>
-                      )}
-                    </div>
-
-                  </motion.div>
-                ) : (
-                  /* Side-by-Side Comparer View */
-                  <motion.div 
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="w-full flex flex-col gap-8"
-                  >
-                    {result.resume_sections && result.resume_sections.length > 0 ? (
-                      result.resume_sections.map((section, idx) => (
-                        <div key={idx} className="flex flex-col border border-slate-200 dark:border-slate-800 rounded-3xl overflow-hidden bg-white dark:bg-slate-900 shadow-sm">
-                          {/* Section Header */}
-                          <div className="bg-slate-50 dark:bg-slate-800/50 px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
-                            <h3 className="font-serif text-lg text-slate-800 dark:text-slate-200 font-bold">{section.section_name}</h3>
-                            <button 
-                              onClick={() => {
-                                navigator.clipboard.writeText(section.enhanced_text);
-                                alert(`Copied enhanced ${section.section_name} to clipboard!`);
-                              }}
-                              className="text-[10px] uppercase tracking-widest font-semibold text-violet-600 hover:text-violet-700 bg-violet-100 px-3 py-1.5 rounded-full transition-all"
-                            >
-                              Copy Optimized
-                            </button>
-                          </div>
-                          
-                          {/* 2-Column Comparer */}
-                          <div className="grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-slate-200 dark:divide-slate-800">
-                            {/* Original */}
-                            <div className="p-6 bg-slate-50/50 dark:bg-slate-900/50">
-                              <span className="text-[10px] text-slate-400 font-semibold tracking-widest uppercase mb-4 block flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span> Your Original Text
-                              </span>
-                              <pre className="whitespace-pre-wrap font-sans text-xs text-slate-500 dark:text-slate-400 leading-relaxed max-h-96 overflow-y-auto">
-                                {section.original_text}
-                              </pre>
-                            </div>
-                            
-                            {/* Enhanced */}
-                            <div className="p-6 bg-violet-50/30 dark:bg-violet-900/10">
-                              <span className="text-[10px] text-violet-600 dark:text-violet-400 font-semibold tracking-widest uppercase mb-4 block flex items-center gap-2">
-                                <span className="w-1.5 h-1.5 rounded-full bg-violet-500 animate-pulse"></span> AI Optimized Text
-                              </span>
-                              <pre className="whitespace-pre-wrap font-sans text-xs text-slate-800 dark:text-slate-200 leading-relaxed max-h-96 overflow-y-auto">
-                                {section.enhanced_text}
-                              </pre>
-                            </div>
-                          </div>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="p-12 text-center text-slate-500 text-sm">
-                        No sections available. (Ensure Gemini returned the resume_sections array).
-                      </div>
-                    )}
-                  </motion.div>
-                )}
-              </motion.div>
-              )
+              <AnalysisDashboard result={result} />
             )}
           </AnimatePresence>
         </div>
 
         {/* Minimal Footer */}
-        <footer className="w-full text-center py-6 mt-12 border-t border-slate-200/30 text-[10px] text-slate-400 font-light flex flex-col sm:flex-row justify-between items-center gap-2">
-          <span>&copy; {new Date().getFullYear()} Skore.ai. All rights reserved. Designed with premium pastel interface matrices.</span>
-          <div className="flex gap-4">
-            <a href="#" className="hover:text-slate-600 transition-colors">Privacy Policy</a>
-            <a href="#" className="hover:text-slate-600 transition-colors">Terms of Service</a>
-            <a href="#" className="hover:text-slate-600 transition-colors">System Status</a>
-          </div>
+        <footer className="w-full text-center py-6 mt-12 border-t border-slate-200/20 text-xs text-slate-400 font-light">
+          Designed by - Aryma Lakhera
         </footer>
 
       </div>
@@ -928,6 +647,7 @@ function App() {
               </button>
 
               <div className="flex flex-col items-center pt-2">
+                <Mascot mood="happy" scale={0.7} className="mb-2" />
                 <h2 className="font-serif text-2xl text-slate-900 dark:text-white mb-4 text-center">
                   {isJobRoleMode ? "Targeted Job Analysis" : "Analyze Your Profile"}
                 </h2>
@@ -982,18 +702,25 @@ function App() {
                 <div className="w-14 h-14 bg-violet-100 dark:bg-violet-900/40 rounded-2xl flex items-center justify-center border border-violet-200/50 dark:border-violet-700/50 mb-5">
                   <Sparkles className="w-6 h-6 text-violet-600 dark:text-violet-400" />
                 </div>
-                <h2 className="font-serif text-2xl text-slate-900 dark:text-white mb-2 text-center">Unlock Cloud Storage</h2>
+                <h2 className="font-serif text-2xl text-slate-900 dark:text-white mb-2 text-center">Sign In</h2>
                 <p className="text-slate-500 dark:text-slate-400 text-center mb-8 px-4 text-xs font-light leading-relaxed">
-                  Sign in instantly with your Google Identity to securely save, compare, and version-track your resume reviews.
+                  Sign in instantly with your Google account to get started.
                 </p>
 
-                <InteractiveButton
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleGoogleLogin}
-                  className="w-full py-3.5 text-sm bg-white hover:bg-slate-50 text-slate-950 border border-slate-200 flex items-center justify-center gap-3 font-semibold shadow-md"
+                  className="w-full py-3.5 px-6 rounded-full text-sm font-semibold flex items-center justify-center gap-3 border border-slate-200 dark:border-slate-800 bg-white hover:bg-slate-50 dark:bg-slate-800 dark:hover:bg-slate-700/80 text-slate-800 dark:text-slate-100 transition-all shadow-md"
                 >
-                  <svg className="w-4.5 h-4.5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" /><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" /><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" /><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" /><path d="M1 1h22v22H1z" fill="none" /></svg>
+                  <svg className="w-5 h-5 flex-shrink-0" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
+                  </svg>
                   Continue with Google
-                </InteractiveButton>
+                </motion.button>
               </div>
 
               <div className="mt-4 text-center text-[10px] text-slate-400 font-light">

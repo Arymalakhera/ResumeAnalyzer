@@ -4,11 +4,15 @@
 
 @layer base {
   body {
-    @apply antialiased selection:bg-violet-500/10 selection:text-violet-900 overflow-x-hidden text-[#2E2E34] dark:text-slate-200 transition-colors duration-500;
+    @apply antialiased selection:bg-violet-500/10 selection:text-violet-900 overflow-x-hidden text-[#2E2E34] dark:text-slate-200 transition-colors duration-500 font-sans;
   }
-  
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+
   body:not(.dark) {
-    background: radial-gradient(circle at 10% 10%, #E2E6F6 0%, #F3F5FA 50%, #FBF9EC 100%);
+    background: radial-gradient(circle at 12% 10%, #E2E6F6 0%, #F3F5FA 50%, #FBF9EC 100%);
   }
 
   body.dark {
@@ -21,13 +25,16 @@
   width: 8px;
   height: 8px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(0, 0, 0, 0.08);
   border-radius: 9999px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(0, 0, 0, 0.15);
 }
@@ -44,7 +51,7 @@
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   border: 1px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 
+  box-shadow:
     0 4px 30px rgba(0, 0, 0, 0.015),
     0 1px 3px rgba(0, 0, 0, 0.03),
     0 24px 50px -20px rgba(0, 0, 0, 0.06);
@@ -55,7 +62,7 @@
 body.dark .mindly-card {
   background: rgba(20, 20, 26, 0.65);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 
+  box-shadow:
     0 4px 30px rgba(0, 0, 0, 0.3),
     inset 0 1px 1px rgba(255, 255, 255, 0.05);
 }
@@ -63,7 +70,7 @@ body.dark .mindly-card {
 .mindly-card:hover {
   background: rgba(255, 255, 255, 0.85);
   border-color: rgba(255, 255, 255, 0.7);
-  box-shadow: 
+  box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.02),
     0 2px 8px rgba(0, 0, 0, 0.04),
     0 32px 60px -15px rgba(0, 0, 0, 0.08);
@@ -72,7 +79,7 @@ body.dark .mindly-card {
 body.dark .mindly-card:hover {
   background: rgba(26, 26, 32, 0.75);
   border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 
+  box-shadow:
     0 8px 40px rgba(0, 0, 0, 0.4),
     inset 0 1px 1px rgba(255, 255, 255, 0.08);
 }
@@ -146,8 +153,384 @@ body.dark .mindly-btn-secondary:hover:not(:disabled) {
 .mindly-input:focus {
   border-color: rgba(26, 26, 29, 0.4);
   background: #FFFFFF;
-  box-shadow: 
+  box-shadow:
     inset 0 1px 2px rgba(0, 0, 0, 0.02),
     0 0 0 4px rgba(26, 26, 29, 0.05);
   outline: none;
+}
+
+/* Blueprint UI Classes */
+.blueprint-root {
+  padding: 1rem 0;
+  font-family: inherit;
+  font-size: 1.025rem;
+}
+
+.blueprint-tab-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.25rem;
+}
+
+.blueprint-tab {
+  padding: 8px 20px;
+  border-radius: 8px;
+  border: 0.5px solid var(--color-border-secondary, #e2e8f0);
+  background: var(--color-background-primary, #ffffff);
+  color: var(--color-text-secondary, #64748b);
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.15s;
+}
+
+.dark .blueprint-tab {
+  background: #1e293b;
+  border-color: #334155;
+  color: #94a3b8;
+}
+
+.blueprint-tab.active {
+  background: #EEEDFE;
+  color: #3C3489;
+  border-color: #AFA9EC;
+}
+
+.dark .blueprint-tab.active {
+  background: rgba(99, 102, 241, 0.15);
+  color: #c7d2fe;
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.blueprint-section-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-tertiary, #94a3b8);
+  margin: 0 0 8px;
+}
+
+.blueprint-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+
+.blueprint-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+  margin-bottom: 1.25rem;
+}
+
+.blueprint-metric {
+  background: var(--color-background-secondary, #f8fafc);
+  border-radius: 12px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  border: 1px solid rgba(0, 0, 0, 0.02);
+}
+
+.dark .blueprint-metric {
+  background: rgba(30, 41, 59, 0.5);
+  border-color: rgba(255, 255, 255, 0.02);
+}
+
+.blueprint-metric-label {
+  position: relative;
+  z-index: 1;
+  font-size: 13.5px;
+  color: var(--color-text-secondary, #64748b);
+  margin: 0 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.blueprint-metric-value {
+  position: relative;
+  z-index: 1;
+  font-size: 28px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.blueprint-metric-sub {
+  position: relative;
+  z-index: 1;
+  font-size: 12px;
+  color: var(--color-text-tertiary, #94a3b8);
+  margin: 2px 0 0;
+}
+
+/* Watermarks (Opacity increased to 0.18 / 0.15 for high visibility as requested) */
+.blueprint-watermark {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  opacity: 0.08;
+  transform: scale(5.5);
+  z-index: 0;
+  pointer-events: none;
+  color: currentColor;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s;
+}
+
+.dark .blueprint-watermark {
+  opacity: 0.15;
+}
+
+.blueprint-metric:hover .blueprint-watermark {
+  transform: scale(6.2) rotate(8deg);
+  opacity: 0.26;
+}
+
+.blueprint-card {
+  background: var(--color-background-primary, #ffffff);
+  border: 0.5px solid var(--color-border-tertiary, #e2e8f0);
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-bottom: 10px;
+  transition: all 0.3s ease;
+}
+
+.dark .blueprint-card {
+  background: rgba(15, 23, 42, 0.6);
+  border-color: rgba(51, 65, 85, 0.5);
+}
+
+.blueprint-card-title {
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--color-text-primary, #0f172a);
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dark .blueprint-card-title {
+  color: #f8fafc;
+}
+
+.blueprint-badge {
+  display: inline-block;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 6px;
+}
+
+.blueprint-badge-green {
+  background: #EAF3DE;
+  color: #3B6D11;
+}
+
+.dark .blueprint-badge-green {
+  background: rgba(34, 197, 94, 0.15);
+  color: #86efac;
+}
+
+.blueprint-badge-amber {
+  background: #FAEEDA;
+  color: #854F0B;
+}
+
+.dark .blueprint-badge-amber {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fcd34d;
+}
+
+.blueprint-badge-red {
+  background: #FCEBEB;
+  color: #A32D2D;
+}
+
+.dark .blueprint-badge-red {
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.blueprint-badge-blue {
+  background: #E6F1FB;
+  color: #185FA5;
+}
+
+.dark .blueprint-badge-blue {
+  background: rgba(59, 130, 246, 0.15);
+  color: #93c5fd;
+}
+
+.blueprint-badge-purple {
+  background: #EEEDFE;
+  color: #3C3489;
+}
+
+.dark .blueprint-badge-purple {
+  background: rgba(99, 102, 241, 0.15);
+  color: #c7d2fe;
+}
+
+.blueprint-row-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 0;
+  border-bottom: 0.5px solid var(--color-border-tertiary, #e2e8f0);
+  font-size: 13.5px;
+}
+
+.dark .blueprint-row-item {
+  border-color: rgba(51, 65, 85, 0.5);
+}
+
+.blueprint-row-item:last-child {
+  border-bottom: none;
+}
+
+.blueprint-row-label {
+  color: var(--color-text-secondary, #64748b);
+}
+
+.blueprint-row-val {
+  color: var(--color-text-primary, #0f172a);
+  font-weight: 500;
+}
+
+.dark .blueprint-row-val {
+  color: #f8fafc;
+}
+
+.blueprint-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+
+.blueprint-tag {
+  font-size: 12.5px;
+  padding: 4px 10px;
+  border-radius: 20px;
+  border: 0.5px solid var(--color-border-secondary, #cbd5e1);
+  color: var(--color-text-secondary, #475569);
+  background: var(--color-background-secondary, #f1f5f9);
+  transition: all 0.2s ease;
+}
+
+.dark .blueprint-tag {
+  background: rgba(30, 41, 59, 0.8);
+  border-color: #334155;
+  color: #cbd5e1;
+}
+
+.blueprint-tag:hover {
+  transform: scale(1.04);
+}
+
+.blueprint-tag.match {
+  background: #EAF3DE;
+  border-color: #97C459;
+  color: #27500A;
+}
+
+.dark .blueprint-tag.match {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.3);
+  color: #86efac;
+}
+
+.blueprint-tag.miss {
+  background: #FCEBEB;
+  border-color: #F09595;
+  color: #791F1F;
+}
+
+.dark .blueprint-tag.miss {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+.blueprint-tag.partial {
+  background: #FAEEDA;
+  border-color: #EF9F27;
+  color: #633806;
+}
+
+.dark .blueprint-tag.partial {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #fcd34d;
+}
+
+.blueprint-progress-row {
+  margin: 6px 0;
+}
+
+.blueprint-progress-label {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--color-text-secondary, #64748b);
+  margin-bottom: 4px;
+}
+
+.blueprint-progress-bar {
+  height: 6px;
+  background: var(--color-background-secondary, #f1f5f9);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dark .blueprint-progress-bar {
+  background: rgba(51, 65, 85, 0.5);
+}
+
+.blueprint-progress-fill {
+  height: 100%;
+  border-radius: 4px;
+}
+
+.blueprint-suggestion {
+  display: flex;
+  gap: 10px;
+  padding: 8px 0;
+  border-bottom: 0.5px solid var(--color-border-tertiary, #e2e8f0);
+  font-size: 13.5px;
+}
+
+.dark .blueprint-suggestion {
+  border-color: rgba(51, 65, 85, 0.5);
+}
+
+.blueprint-suggestion:last-child {
+  border-bottom: none;
+}
+
+.blueprint-sug-icon {
+  color: var(--color-text-tertiary, #94a3b8);
+  font-size: 16px;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.blueprint-sug-text {
+  color: var(--color-text-primary, #0f172a);
+  line-height: 1.5;
+}
+
+.dark .blueprint-sug-text {
+  color: #f8fafc;
+}
+
+.blueprint-sug-text span {
+  color: var(--color-text-secondary, #64748b);
+  display: block;
+  font-size: 12.5px;
+  margin-top: 2px;
 }
